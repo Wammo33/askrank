@@ -124,3 +124,38 @@ def test_cli_only_and_extractor_flags(tmp_path):
     assert "(5 answers)" in r.output  # 5 queries x 1 provider x 1 run
     r = CliRunner().invoke(app, ["run", str(pilot), "--fake", "--only", "bard"])
     assert r.exit_code == 1
+
+
+class Broken:
+    name, model = "broken", "b"
+
+    def ask(self, prompt, location=None):
+        raise PermissionError("API key not valid")
+
+
+def test_failures_go_to_on_error(config, tmp_path):
+    errors, progress = [], []
+    run(config, Store(tmp_path / "t.db"), [Broken()], RuleExtractor(config), runs_per_query=1,
+        on_progress=progress.append, on_error=errors.append)
+    assert any("API key not valid" in e for e in errors)
+    assert not any("failed" in p for p in progress)
+
+
+def test_cli_shows_why_everything_failed(tmp_path, monkeypatch):
+    import askrank.cli as cli
+
+    monkeypatch.setattr(cli, "get_provider", lambda p: Broken())
+    r = CliRunner().invoke(app, ["run", str(EXAMPLE), "--db", str(tmp_path / "x.db"), "-n", "1",
+                                 "--yes", "--extractor", "rules"], env={"COLUMNS": "200"})
+    assert r.exit_code == 0, r.output
+    assert "API key not valid" in r.output
+    assert "No answers were collected" in r.output
+
+
+def test_cli_answers(tmp_path):
+    db = str(tmp_path / "a.db")
+    CliRunner().invoke(app, ["run", str(EXAMPLE), "--fake", "--db", db, "-n", "1"])
+    r = CliRunner().invoke(app, ["answers", str(EXAMPLE), "--db", db, "--limit", "2"],
+                           env={"COLUMNS": "200"})
+    assert r.exit_code == 0, r.output
+    assert "Q:" in r.output and "Mentions:" in r.output

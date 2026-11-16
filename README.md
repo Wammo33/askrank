@@ -29,6 +29,7 @@ cp .env.example .env          # then put your keys in .env (it's git-ignored)
 askrank validate examples/dr-kretschmer.yaml   # shows how many API calls a run makes
 askrank run examples/dr-kretschmer.yaml --runs 3
 askrank report examples/dr-kretschmer.yaml     # re-print the latest run
+askrank answers examples/dr-kretschmer.yaml    # read the raw answers and sources
 askrank compare examples/dr-kretschmer.yaml 1 2  # did visibility really change?
 ```
 

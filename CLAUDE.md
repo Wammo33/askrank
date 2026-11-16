@@ -20,7 +20,7 @@ reports mention rate with confidence intervals and share of voice.
 - `src/askrank/runner.py`  Main loop. One failed call must not abort the batch.
 - `src/askrank/report.py`  `summarise` (data) and `render` (rich tables) are separate on purpose.
 - `src/askrank/evals.py`   Label export, labelled-answer loading, precision/recall scoring.
-- `src/askrank/cli.py`     Typer CLI: `validate`, `run`, `report`, `compare`, `label-export`, `eval`.
+- `src/askrank/cli.py`     Typer CLI: `validate`, `run`, `report`, `answers`, `compare`, `label-export`, `eval`.
 - `evals/`                 Hand-labelled answers for measuring extractor accuracy.
 - `examples/demo.yaml`     Made-up names; used by tests and the `--fake` demo.
 - `examples/dr-kretschmer.yaml` Real pilot config (Dr Kretschmer Associates, Kraaifontein, drwayne.co.za).
