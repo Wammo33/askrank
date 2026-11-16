@@ -1,5 +1,5 @@
 # Demo config with made-up names. Used by the tests and by `askrank run examples/demo.yaml --fake`.
-# For a real pilot see examples/brackenfell-gp.yaml.
+# For a real pilot see examples/dr-kretschmer.yaml.
 project: demo
 
 # Put the location in the wording too: APIs don't personalise by location like the apps do.

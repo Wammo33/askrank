@@ -23,7 +23,7 @@ reports mention rate with confidence intervals and share of voice.
 - `src/askrank/cli.py`     Typer CLI: `validate`, `run`, `report`, `compare`, `label-export`, `eval`.
 - `evals/`                 Hand-labelled answers for measuring extractor accuracy.
 - `examples/demo.yaml`     Made-up names; used by tests and the `--fake` demo.
-- `examples/brackenfell-gp.yaml` Real pilot config (Dr Wayne Kretschmer).
+- `examples/dr-kretschmer.yaml` Real pilot config (Dr Kretschmer Associates, drwayne.co.za).
 
 ## Commands
 - Install: `pip install -e ".[dev]"`

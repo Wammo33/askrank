@@ -104,3 +104,12 @@ def test_cli_label_export_and_eval(tmp_path):
     r = CliRunner().invoke(app, ["eval", str(EXAMPLE), str(labels), "--extractor", "rules"])
     assert r.exit_code == 0, r.output
     assert "100.0%" in r.output  # pre-filled by the same rules, so a perfect score
+
+
+def test_cli_fake_uses_your_business_names(tmp_path):
+    pilot = EXAMPLE.parent / "dr-kretschmer.yaml"
+    r = CliRunner().invoke(app, ["run", str(pilot), "--fake", "--db", str(tmp_path / "p.db"),
+                                 "-n", "2"], env={"COLUMNS": "200"})
+    assert r.exit_code == 0, r.output
+    assert "Dr Kretschmer Associates (you)" in r.output
+    assert "drwayne.co.za" in r.output

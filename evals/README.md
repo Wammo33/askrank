@@ -2,12 +2,12 @@
 
 Measures how accurately the extractor finds business mentions in AI answers.
 
-1. After a real run: `askrank label-export examples/brackenfell-gp.yaml --limit 50`
+1. After a real run: `askrank label-export examples/dr-kretschmer.yaml --limit 50`
    writes `evals/labels.jsonl`, one answer per line, pre-filled by the rule extractor.
 2. For each line, read `text` and fix `gold`: every business the answer names, in the
    order it first appears, with `sentiment` (positive / neutral / hedged / negative).
    Include businesses that aren't in your config. Then set `"labelled": true`.
-3. Score: `askrank eval examples/brackenfell-gp.yaml evals/labels.jsonl --extractor openai`
+3. Score: `askrank eval examples/dr-kretschmer.yaml evals/labels.jsonl --extractor openai`
    (and `--extractor rules` to compare).
 
 Tips: label answers from all four models, and include some where the target is not
