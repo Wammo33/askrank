@@ -113,3 +113,14 @@ def test_cli_fake_uses_your_business_names(tmp_path):
     assert r.exit_code == 0, r.output
     assert "Dr Kretschmer Associates (you)" in r.output
     assert "drwayne.co.za" in r.output
+
+
+def test_cli_only_and_extractor_flags(tmp_path):
+    pilot = EXAMPLE.parent / "dr-kretschmer.yaml"
+    r = CliRunner().invoke(app, ["run", str(pilot), "--fake", "--only", "gemini",
+                                 "--extractor", "rules", "--db", str(tmp_path / "o.db"),
+                                 "-n", "1"], env={"COLUMNS": "200"})
+    assert r.exit_code == 0, r.output
+    assert "(5 answers)" in r.output  # 5 queries x 1 provider x 1 run
+    r = CliRunner().invoke(app, ["run", str(pilot), "--fake", "--only", "bard"])
+    assert r.exit_code == 1

@@ -1,5 +1,5 @@
-# Pilot: Dr Kretschmer Associates (Dr Wayne Kretschmer), GP in Windsor Park,
-# Kuils River area, Northern Suburbs of Cape Town. https://drwayne.co.za
+# Pilot: Dr Kretschmer Associates (Dr Wayne Kretschmer), GP in Kraaifontein,
+# Northern Suburbs of Cape Town, near Brackenfell and Durbanville. https://drwayne.co.za
 #
 # Competitors are left empty on purpose. Your first run lists every practice the
 # models named under "Other businesses the models named". Copy the main ones into
@@ -8,7 +8,7 @@ project: dr-kretschmer
 
 # Put the place in the wording too: APIs don't personalise by location like the apps do.
 location:
-  city: Kuils River
+  city: Kraaifontein
   region: Western Cape
   country: ZA
   timezone: Africa/Johannesburg
@@ -31,15 +31,15 @@ competitors: []
 # Mix of general questions and questions about services the practice actually offers.
 queries:
   - id: best-gp
-    text: "Who is the best GP in Kuils River, Cape Town?"
+    text: "Who is the best GP in Kraaifontein, Cape Town?"
   - id: family-doctor-northern
-    text: "Can you recommend a good family doctor in Cape Town's Northern Suburbs, near Kuils River or Brackenfell?"
+    text: "Can you recommend a good family doctor in Cape Town's Northern Suburbs, near Kraaifontein, Brackenfell or Durbanville?"
   - id: executive-medical
-    text: "Where can I get an executive medical with a stress ECG near Kuils River, Cape Town?"
+    text: "Where can I get an executive medical with a stress ECG near Kraaifontein or Durbanville, Cape Town?"
   - id: menopause
-    text: "GP near Kuils River or Brackenfell, Cape Town who helps with menopause and hormone therapy"
+    text: "GP near Kraaifontein or Brackenfell, Cape Town who helps with menopause and hormone therapy"
   - id: discovery-network
-    text: "Which GPs near Kuils River, Cape Town are on the Discovery GP network?"
+    text: "Which GPs near Kraaifontein, Brackenfell or Durbanville are on the Discovery GP network?"
 
 runs_per_query: 5
 

@@ -3,6 +3,7 @@
     askrank validate examples/dr-kretschmer.yaml
     askrank run examples/demo.yaml --fake               # free offline demo
     askrank run examples/dr-kretschmer.yaml --runs 3    # real API calls
+    askrank run examples/dr-kretschmer.yaml --only gemini --extractor rules   # free key only
     askrank report examples/dr-kretschmer.yaml
     askrank compare examples/dr-kretschmer.yaml 1 2     # did visibility really change?
     askrank label-export examples/dr-kretschmer.yaml    # start an eval set
@@ -75,10 +76,26 @@ def run(
     runs: int | None = typer.Option(None, "--runs", "-n", min=1, help="Override runs_per_query"),
     fake: bool = typer.Option(False, "--fake", help="Offline demo: fake provider + rule extractor"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip the cost confirmation"),
+    only: list[str] | None = typer.Option(
+        None, "--only", help="Use only these providers from the config, e.g. --only gemini"),
+    extractor: str | None = typer.Option(
+        None, "--extractor", help="Override the extractor: rules (free) or openai"),
 ) -> None:
     """Ask every query to every provider n times, extract mentions, store results."""
     _load_dotenv()
     cfg = _load(config)
+    if only:
+        chosen = [p for p in cfg.providers if p.name in only]
+        if not chosen:
+            console.print(f"[red]None of {only} are in the config's providers.[/red]")
+            raise typer.Exit(1)
+        cfg = cfg.model_copy(update={"providers": chosen})
+    if extractor:
+        if extractor not in ("rules", "openai"):
+            console.print("[red]--extractor must be rules or openai[/red]")
+            raise typer.Exit(1)
+        cfg = cfg.model_copy(update={"extractor": cfg.extractor.model_copy(
+            update={"provider": extractor})})
     if fake:
         cfg = cfg.model_copy(update={
             # one simulated model per configured provider, so the model breakdown shows
