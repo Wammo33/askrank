@@ -19,14 +19,17 @@ reports mention rate with confidence intervals and share of voice.
 - `src/askrank/store.py`   SQLite. Raw answers are saved before extraction.
 - `src/askrank/runner.py`  Main loop. One failed call must not abort the batch.
 - `src/askrank/report.py`  `summarise` (data) and `render` (rich tables) are separate on purpose.
-- `src/askrank/cli.py`     Typer CLI: `validate`, `run`, `report`.
-- `evals/`                 Hand-labelled answers for measuring extractor accuracy (Phase 2).
+- `src/askrank/evals.py`   Label export, labelled-answer loading, precision/recall scoring.
+- `src/askrank/cli.py`     Typer CLI: `validate`, `run`, `report`, `compare`, `label-export`, `eval`.
+- `evals/`                 Hand-labelled answers for measuring extractor accuracy.
+- `examples/demo.yaml`     Made-up names; used by tests and the `--fake` demo.
+- `examples/brackenfell-gp.yaml` Real pilot config (Dr Wayne Kretschmer).
 
 ## Commands
 - Install: `pip install -e ".[dev]"`
 - Tests: `pytest` (must pass with no network and no API keys)
 - Lint: `ruff check .`
-- Demo: `askrank run examples/brackenfell-gp.yaml --fake --db /tmp/demo.db`
+- Demo: `askrank run examples/demo.yaml --fake --db /tmp/demo.db`
 
 ## Conventions
 - Tests never hit real APIs. Inject a fake client or use `FakeProvider`.
@@ -36,3 +39,5 @@ reports mention rate with confidence intervals and share of voice.
 - Adding a provider: new file in `providers/`, register it in `providers/__init__.py:get_provider`,
   add a test with a fake client.
 - Prefer small models for extraction to keep costs down.
+- Provider quirks live in the adapter: Claude `pause_turn`/`refusal`, Gemini redirect
+  citation URLs, Perplexity sources in extra response fields.

@@ -37,6 +37,8 @@ class Summary:
     businesses: list[BusinessStats]
     untracked: Counter  # businesses the models named that aren't in your config
     domains: list[tuple[str, int]]
+    # "provider/model" -> business -> (answers mentioning, answers from that model)
+    by_model: dict[str, dict[str, tuple[int, int]]] = field(default_factory=dict)
 
 
 def summarise(store: Store, run_id: int, config: Config, confidence: float = 0.95) -> Summary:
@@ -73,7 +75,26 @@ def summarise(store: Store, run_id: int, config: Config, confidence: float = 0.9
         for b in config.businesses
     ]
     stats.sort(key=lambda s: (-s.answers_mentioning, s.name))
-    return Summary(run_id, n, stats, untracked, store.cited_domains(run_id))
+
+    # Model breakdown: "visible on Perplexity, invisible on ChatGPT" is a finding.
+    model_of = {a["id"]: f"{a['provider']}/{a['model']}" for a in answers}
+    totals = Counter(model_of.values())
+    hit: dict[str, dict[str, set[int]]] = defaultdict(lambda: defaultdict(set))
+    for m in mentions:
+        if m["matched"] is not None and m["answer_id"] in model_of:
+            hit[model_of[m["answer_id"]]][m["matched"]].add(m["answer_id"])
+    by_model = {
+        label: {b.name: (len(hit[label][b.name]), total) for b in config.businesses}
+        for label, total in sorted(totals.items())
+    }
+    return Summary(run_id, n, stats, untracked, store.cited_domains(run_id), by_model)
+
+
+def target_counts(store: Store, run_id: int, config: Config) -> tuple[int, int]:
+    """(answers mentioning the target, extracted answers) for one run."""
+    s = summarise(store, run_id, config)
+    t = next(b for b in s.businesses if b.is_target)
+    return t.answers_mentioning, t.total_answers
 
 
 def _pct(x: float) -> str:
@@ -101,6 +122,21 @@ def render(summary: Summary, console: Console | None = None, top_n: int = 10) ->
             f"{sent['positive']}/{sent['neutral']}/{sent['hedged']}/{sent['negative']}",
         )
     console.print(t)
+
+    if len(summary.by_model) > 1:
+        mb = Table(title="Mention rate by model (95% CI)")
+        mb.add_column("Business")
+        for label in summary.by_model:
+            mb.add_column(label, justify="right")
+        for s in summary.businesses:
+            cells = []
+            for label in summary.by_model:
+                k, n = summary.by_model[label][s.name]
+                lo, hi = wilson_interval(k, n)
+                cells.append(f"{_pct(k / n if n else 0)} ({_pct(lo)}-{_pct(hi)})")
+            name = f"[bold green]{s.name}[/bold green]" if s.is_target else s.name
+            mb.add_row(name, *cells)
+        console.print(mb)
 
     if summary.untracked:
         u = Table(title="Other businesses the models named (consider adding as competitors)")

@@ -7,8 +7,9 @@ instead of Googling. askrank asks those questions for you, many times over, reco
 gets named, in what position and with what sources, and reports your share of voice
 **with confidence intervals**, because a single AI answer tells you almost nothing.
 
-> Status: Phase 1 MVP. One provider (OpenAI with web search), rule-based and LLM
-> extractors, SQLite storage, terminal report. Multi-model, evals and a dashboard are next.
+> Status: Phase 2. Four providers (ChatGPT, Claude, Gemini, Perplexity, all with web
+> search), model breakdown with confidence intervals, before/after significance test,
+> and an extractor eval workflow. Weekly tracking and a dashboard are next.
 
 ## Quick start (30 seconds, no API key)
 
@@ -16,7 +17,7 @@ gets named, in what position and with what sources, and reports your share of vo
 git clone https://github.com/Wammo33/askrank && cd askrank
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-askrank run examples/brackenfell-gp.yaml --fake
+askrank run examples/demo.yaml --fake
 ```
 
 `--fake` uses canned answers so you can see the whole pipeline for free.
@@ -24,13 +25,41 @@ askrank run examples/brackenfell-gp.yaml --fake
 ## Real run
 
 ```bash
-cp .env.example .env          # then put your key in .env (it's git-ignored)
+cp .env.example .env          # then put your keys in .env (it's git-ignored)
 askrank validate examples/brackenfell-gp.yaml   # shows how many API calls a run makes
 askrank run examples/brackenfell-gp.yaml --runs 3
 askrank report examples/brackenfell-gp.yaml     # re-print the latest run
+askrank compare examples/brackenfell-gp.yaml 1 2  # did visibility really change?
 ```
 
-Set a monthly spending limit on your API account before your first real run.
+Set a monthly spending limit on every API account before your first real run. Remove
+any provider from the YAML that you don't have a key for.
+
+| Provider | Key | Search mode used |
+|---|---|---|
+| OpenAI (ChatGPT) | `OPENAI_API_KEY` | Responses API `web_search` tool, approximate user location |
+| Anthropic (Claude) | `ANTHROPIC_API_KEY` | Server-side `web_search` tool, approximate user location |
+| Google (Gemini) | `GEMINI_API_KEY` | Google Search grounding (no location parameter) |
+| Perplexity | `PERPLEXITY_API_KEY` | Sonar (always searches), country hint |
+
+## Extractor accuracy (evals)
+
+Every number above depends on the extractor finding mentions correctly, so askrank
+measures it against hand-labelled answers:
+
+```bash
+askrank label-export examples/brackenfell-gp.yaml --limit 50   # writes evals/labels.jsonl
+# fix each "gold" list by hand and set "labelled": true
+askrank eval examples/brackenfell-gp.yaml evals/labels.jsonl --extractor rules
+askrank eval examples/brackenfell-gp.yaml evals/labels.jsonl --extractor openai
+```
+
+It reports precision, recall, F1, position accuracy and sentiment accuracy.
+
+| Extractor | Precision | Recall | F1 | Sentiment |
+|---|---|---|---|---|
+| rules | _tbd_ | _tbd_ | _tbd_ | n/a |
+| LLM (gpt-5.4-nano) | _tbd_ | _tbd_ | _tbd_ | _tbd_ |
 
 ## What it measures
 
@@ -41,6 +70,7 @@ Set a monthly spending limit on your API account before your first real run.
 | Average position | 1 = named first |
 | Sentiment | positive / neutral / hedged / negative (LLM extractor only) |
 | Cited sources | Domains the model relied on: this is what to fix |
+| Model breakdown | Mention rate per model, each with its own interval |
 | Other businesses | Names the models gave that aren't in your config |
 
 ### Why confidence intervals?
@@ -53,7 +83,7 @@ and a **two-proportion z-test** to check whether a change between two runs is re
 ## How it works
 
 ```
-config.yaml ─► runner ─► provider adapter (OpenAI Responses API + web_search)
+config.yaml ─► runner ─► provider adapters (OpenAI, Claude, Gemini, Perplexity; web search on)
                                │
                                ▼
                        raw answer saved (SQLite)
@@ -94,7 +124,8 @@ See [CLAUDE.md](CLAUDE.md) for architecture notes and conventions.
 ## Roadmap
 
 - [x] Phase 1: YAML config, one provider, n runs, extraction, share-of-voice table
-- [ ] Phase 2: Claude, Gemini, Perplexity; model breakdown; hand-labelled eval set
+- [x] Phase 2: Claude, Gemini, Perplexity; model breakdown; compare runs; eval tooling
+- [ ] Phase 2b: publish extractor accuracy on ~50 hand-labelled answers
 - [ ] Phase 3: weekly tracking and Streamlit dashboard
 - [ ] Phase 4: AWS Lambda schedule and monthly PDF report
 

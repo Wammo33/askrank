@@ -56,6 +56,17 @@ def _all_urls(answer: Answer, extra: list[str] | None = None) -> list[str]:
     return list(dict.fromkeys(u.rstrip(".,;") for u in urls))
 
 
+def _alias_regex(b: Business) -> re.Pattern[str]:
+    """One regex for all of a business's names, tolerant of punctuation and spacing,
+    so "Dr Kretschmer", "Dr. Kretschmer" and "dr  kretschmer" all match."""
+    variants = []
+    for a in sorted(b.all_names, key=len, reverse=True):
+        words = normalise(a).split()
+        if words:
+            variants.append(r"\W+".join(re.escape(w) for w in words))
+    return re.compile(rf"(?<!\w)(?:{'|'.join(variants)})(?!\w)", re.IGNORECASE)
+
+
 class RuleExtractor:
     def __init__(self, config: Config):
         self.businesses = config.businesses
@@ -63,8 +74,7 @@ class RuleExtractor:
     def extract(self, answer: Answer) -> Extraction:
         hits: list[tuple[int, Business]] = []
         for b in self.businesses:
-            pattern = "|".join(re.escape(a) for a in sorted(b.all_names, key=len, reverse=True))
-            m = re.search(rf"(?<!\w)(?:{pattern})(?!\w)", answer.text, flags=re.IGNORECASE)
+            m = _alias_regex(b).search(answer.text)
             if m:
                 hits.append((m.start(), b))
         hits.sort(key=lambda h: h[0])

@@ -1,42 +1,56 @@
-# askrank config: one business, its competitors, and the questions real patients ask.
-# Replace the placeholder names below with the real practice and real competitors.
+# Pilot: Dr Wayne Kretschmer, GP in Brackenfell, Cape Town.
+#
+# Competitors are left empty on purpose. Your first run lists every practice the
+# models named under "Other businesses the models named". Copy the main ones into
+# `competitors` below (with their websites) so share of voice compares like for like.
 project: brackenfell-gp
 
-# Put the location in the wording too: APIs don't personalise by location like the apps do.
+# Put the place in the wording too: APIs don't personalise by location like the apps do.
 location:
   city: Brackenfell
   region: Western Cape
-  country: ZA            # ISO 2-letter code, passed to the web-search tool
+  country: ZA
   timezone: Africa/Johannesburg
 
 target:
-  name: Example Family Practice
-  aliases: ["Example Family Practice Brackenfell", "Example FP"]
-  website: example-practice.co.za
+  name: Dr Wayne Kretschmer
+  aliases:
+    - Wayne Kretschmer
+    - Dr W Kretschmer
+    - Dr Kretschmer
+    - Kretschmer
+  # website: add the practice website here, so citations of it are easy to spot
 
-competitors:
-  - name: Competitor Medical Centre A
-    aliases: ["Competitor A"]
-    website: competitor-a.co.za
-  - name: Competitor Family Doctors B
-    aliases: ["Competitor B"]
-  - name: Competitor Clinic C (Kuils River)
-    aliases: ["Competitor C"]
+competitors: []
+#  - name: <Practice name>
+#    aliases: ["<short name>", "<doctor's name>"]
+#    website: <their-site.co.za>
 
 queries:
   - id: best-gp
     text: "Who is the best GP in Brackenfell, Cape Town?"
+  - id: family-doctor
+    text: "Can you recommend a good family doctor in Brackenfell, Cape Town?"
   - id: saturday
     text: "Family doctor near Brackenfell, Cape Town that is open on Saturdays"
   - id: medicals
     text: "GP in Brackenfell, Cape Town that does work medicals"
+  - id: new-patients
+    text: "Which GPs in Brackenfell or Kuils River are taking new patients?"
 
 runs_per_query: 5
 
+# Each provider needs its own API key in .env. Delete any you don't have a key for.
+# Model names change often: check each provider's model list if a call fails.
 providers:
-  - name: openai
+  - name: openai          # ChatGPT, with web search
     model: gpt-5.4-mini
-    web_search: true
+  - name: anthropic       # Claude, with web search
+    model: claude-opus-5-5
+  - name: gemini          # Gemini, with Google Search grounding
+    model: gemini-3.5-flash
+  - name: perplexity      # Perplexity Sonar (always searches)
+    model: sonar
 
 # A small, cheap model is plenty for turning an answer into JSON.
 extractor:

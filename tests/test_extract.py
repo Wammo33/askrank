@@ -55,3 +55,15 @@ def test_llm_extractor_postprocesses_model_output(config):
         ("Example FP", 2, "Example Family Practice"),  # duplicate at pos 5 dropped
     ]
     assert ex.cited_urls == ["https://medpages.info/x"]
+
+
+def test_rule_extractor_tolerates_punctuation():
+    from askrank.config import Config
+
+    cfg = Config.model_validate({
+        "project": "p", "target": {"name": "Dr Wayne Kretschmer", "aliases": ["Dr Kretschmer"]},
+        "queries": [{"id": "q", "text": "?"}], "providers": [{"name": "fake", "model": "m"}],
+    })
+    for text in ("Try Dr. Kretschmer.", "DR WAYNE KRETSCHMER is great", "dr  kretschmer"):
+        ex = RuleExtractor(cfg).extract(_answer(text))
+        assert [m.matched for m in ex.mentions] == ["Dr Wayne Kretschmer"], text
