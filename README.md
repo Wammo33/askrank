@@ -26,10 +26,10 @@ askrank run examples/demo.yaml --fake
 
 ```bash
 cp .env.example .env          # then put your keys in .env (it's git-ignored)
-askrank validate examples/brackenfell-gp.yaml   # shows how many API calls a run makes
-askrank run examples/brackenfell-gp.yaml --runs 3
-askrank report examples/brackenfell-gp.yaml     # re-print the latest run
-askrank compare examples/brackenfell-gp.yaml 1 2  # did visibility really change?
+askrank validate examples/dr-kretschmer.yaml   # shows how many API calls a run makes
+askrank run examples/dr-kretschmer.yaml --runs 3
+askrank report examples/dr-kretschmer.yaml     # re-print the latest run
+askrank compare examples/dr-kretschmer.yaml 1 2  # did visibility really change?
 ```
 
 Set a monthly spending limit on every API account before your first real run. Remove
@@ -48,10 +48,10 @@ Every number above depends on the extractor finding mentions correctly, so askra
 measures it against hand-labelled answers:
 
 ```bash
-askrank label-export examples/brackenfell-gp.yaml --limit 50   # writes evals/labels.jsonl
+askrank label-export examples/dr-kretschmer.yaml --limit 50   # writes evals/labels.jsonl
 # fix each "gold" list by hand and set "labelled": true
-askrank eval examples/brackenfell-gp.yaml evals/labels.jsonl --extractor rules
-askrank eval examples/brackenfell-gp.yaml evals/labels.jsonl --extractor openai
+askrank eval examples/dr-kretschmer.yaml evals/labels.jsonl --extractor rules
+askrank eval examples/dr-kretschmer.yaml evals/labels.jsonl --extractor openai
 ```
 
 It reports precision, recall, F1, position accuracy and sentiment accuracy.

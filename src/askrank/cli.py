@@ -1,12 +1,12 @@
 """Command-line interface.
 
-    askrank validate examples/brackenfell-gp.yaml
+    askrank validate examples/dr-kretschmer.yaml
     askrank run examples/demo.yaml --fake               # free offline demo
-    askrank run examples/brackenfell-gp.yaml --runs 3    # real API calls
-    askrank report examples/brackenfell-gp.yaml
-    askrank compare examples/brackenfell-gp.yaml 1 2     # did visibility really change?
-    askrank label-export examples/brackenfell-gp.yaml    # start an eval set
-    askrank eval examples/brackenfell-gp.yaml evals/labels.jsonl
+    askrank run examples/dr-kretschmer.yaml --runs 3    # real API calls
+    askrank report examples/dr-kretschmer.yaml
+    askrank compare examples/dr-kretschmer.yaml 1 2     # did visibility really change?
+    askrank label-export examples/dr-kretschmer.yaml    # start an eval set
+    askrank eval examples/dr-kretschmer.yaml evals/labels.jsonl
 """
 
 from __future__ import annotations
@@ -21,7 +21,8 @@ from rich.table import Table
 from askrank.config import Config, ExtractorConfig, ProviderConfig, load_config
 from askrank.evals import evaluate, export_for_labelling, load_labelled
 from askrank.extract import get_extractor
-from askrank.providers import get_provider
+from askrank.providers import FakeProvider, get_provider
+from askrank.providers.fake import demo_answers
 from askrank.report import render, summarise, target_counts
 from askrank.runner import run as run_pipeline
 from askrank.stats import two_proportion_z_test, wilson_interval
@@ -91,7 +92,13 @@ def run(
         typer.confirm(f"This makes about {calls} paid API answer calls. Continue?", abort=True)
 
     try:
-        providers = [get_provider(p) for p in cfg.providers]
+        if fake:
+            answers = demo_answers(cfg.target.name, [c.name for c in cfg.competitors],
+                                   cfg.target.website)
+            providers = [FakeProvider(model=p.model, answers=answers, seed=i)
+                         for i, p in enumerate(cfg.providers)]
+        else:
+            providers = [get_provider(p) for p in cfg.providers]
         extractor = get_extractor(cfg)
     except Exception as e:
         console.print(f"[red]{e}[/red]")

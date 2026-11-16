@@ -46,8 +46,9 @@ def test_pilot_config_loads():
 
     from askrank.config import load_config
 
-    cfg = load_config(Path(__file__).resolve().parents[1] / "examples" / "brackenfell-gp.yaml")
-    assert cfg.target.name == "Dr Wayne Kretschmer"
+    cfg = load_config(Path(__file__).resolve().parents[1] / "examples" / "dr-kretschmer.yaml")
+    assert cfg.target.name == "Dr Kretschmer Associates"
+    assert cfg.target.website == "drwayne.co.za"
     assert {p.name for p in cfg.providers} == {"openai", "anthropic", "gemini", "perplexity"}
 
 
