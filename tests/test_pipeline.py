@@ -56,4 +56,51 @@ def test_cli_fake_run_and_report(tmp_path):
 def test_cli_validate():
     r = CliRunner().invoke(app, ["validate", str(EXAMPLE)])
     assert r.exit_code == 0
-    assert "15 answer calls" in r.output
+    assert "30 answer calls" in r.output
+
+
+class Scripted:
+    """Mentions the target on the first `hits` calls, then stops."""
+
+    def __init__(self, name, hits):
+        self.name, self.model, self.hits, self.calls = name, "m", hits, 0
+
+    def ask(self, prompt, location=None):
+        self.calls += 1
+        return AnswerResult("Example FP." if self.calls <= self.hits else "Competitor A.")
+
+
+def test_model_breakdown(config, tmp_path):
+    store = Store(tmp_path / "t.db")
+    n = len(config.queries) * 2
+    rid = run(config, store, [Scripted("good", n), Scripted("bad", 0)], RuleExtractor(config),
+              runs_per_query=2)
+    s = summarise(store, rid, config)
+    assert s.by_model["good/m"]["Example Family Practice"] == (n, n)
+    assert s.by_model["bad/m"]["Example Family Practice"] == (0, n)
+    assert s.by_model["bad/m"]["Competitor Medical Centre A"] == (n, n)
+
+
+def test_cli_compare(config, tmp_path):
+    db = tmp_path / "c.db"
+    store = Store(db)
+    run(config, store, [Scripted("x", 3)], RuleExtractor(config), runs_per_query=10)
+    run(config, store, [Scripted("x", 25)], RuleExtractor(config), runs_per_query=10)
+    store.close()
+    r = CliRunner().invoke(app, ["compare", str(EXAMPLE), "1", "2", "--db", str(db)])
+    assert r.exit_code == 0, r.output
+    assert "a real change" in r.output
+
+
+def test_cli_label_export_and_eval(tmp_path):
+    db, labels = str(tmp_path / "e.db"), tmp_path / "labels.jsonl"
+    assert CliRunner().invoke(app, ["run", str(EXAMPLE), "--fake", "--db", db, "-n", "1"]
+                              ).exit_code == 0
+    r = CliRunner().invoke(app, ["label-export", str(EXAMPLE), "--db", db, "--out", str(labels)])
+    assert r.exit_code == 0, r.output
+    r = CliRunner().invoke(app, ["eval", str(EXAMPLE), str(labels), "--extractor", "rules"])
+    assert r.exit_code == 1  # nothing labelled yet
+    labels.write_text(labels.read_text().replace('"labelled":false', '"labelled":true'))
+    r = CliRunner().invoke(app, ["eval", str(EXAMPLE), str(labels), "--extractor", "rules"])
+    assert r.exit_code == 0, r.output
+    assert "100.0%" in r.output  # pre-filled by the same rules, so a perfect score

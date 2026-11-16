@@ -39,3 +39,18 @@ def test_bad_country_rejected():
 def test_runs_per_query_bounds():
     with pytest.raises(ValidationError):
         Config.model_validate(_base(runs_per_query=0))
+
+
+def test_pilot_config_loads():
+    from pathlib import Path
+
+    from askrank.config import load_config
+
+    cfg = load_config(Path(__file__).resolve().parents[1] / "examples" / "brackenfell-gp.yaml")
+    assert cfg.target.name == "Dr Wayne Kretschmer"
+    assert {p.name for p in cfg.providers} == {"openai", "anthropic", "gemini", "perplexity"}
+
+
+def test_unknown_provider_rejected():
+    with pytest.raises(ValidationError):
+        Config.model_validate(_base(providers=[{"name": "bard", "model": "m"}]))

@@ -7,6 +7,7 @@ message instead of silently producing wrong results later.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -42,13 +43,13 @@ class Query(BaseModel):
 
 
 class ProviderConfig(BaseModel):
-    name: str  # "openai" or "fake"
+    name: Literal["openai", "anthropic", "gemini", "perplexity", "fake"]
     model: str
     web_search: bool = True
 
 
 class ExtractorConfig(BaseModel):
-    provider: str = "openai"  # "openai" (LLM) or "rules" (alias matching only)
+    provider: Literal["openai", "rules"] = "openai"  # LLM, or free alias matching
     model: str = "gpt-5.4-nano"
 
 

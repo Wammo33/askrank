@@ -1,0 +1,45 @@
+# Demo config with made-up names. Used by the tests and by `askrank run examples/demo.yaml --fake`.
+# For a real pilot see examples/brackenfell-gp.yaml.
+project: demo
+
+# Put the location in the wording too: APIs don't personalise by location like the apps do.
+location:
+  city: Brackenfell
+  region: Western Cape
+  country: ZA            # ISO 2-letter code, passed to the web-search tool
+  timezone: Africa/Johannesburg
+
+target:
+  name: Example Family Practice
+  aliases: ["Example Family Practice Brackenfell", "Example FP"]
+  website: example-practice.co.za
+
+competitors:
+  - name: Competitor Medical Centre A
+    aliases: ["Competitor A"]
+    website: competitor-a.co.za
+  - name: Competitor Family Doctors B
+    aliases: ["Competitor B"]
+  - name: Competitor Clinic C (Kuils River)
+    aliases: ["Competitor C"]
+
+queries:
+  - id: best-gp
+    text: "Who is the best GP in Brackenfell, Cape Town?"
+  - id: saturday
+    text: "Family doctor near Brackenfell, Cape Town that is open on Saturdays"
+  - id: medicals
+    text: "GP in Brackenfell, Cape Town that does work medicals"
+
+runs_per_query: 5
+
+providers:
+  - name: openai
+    model: gpt-5.4-mini
+  - name: perplexity
+    model: sonar
+
+# A small, cheap model is plenty for turning an answer into JSON.
+extractor:
+  provider: openai
+  model: gpt-5.4-nano
