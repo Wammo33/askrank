@@ -32,8 +32,13 @@ askrank report examples/dr-kretschmer.yaml     # re-print the latest run
 askrank compare examples/dr-kretschmer.yaml 1 2  # did visibility really change?
 ```
 
-Set a monthly spending limit on every API account before your first real run. Remove
-any provider from the YAML that you don't have a key for.
+Set a monthly spending limit on every API account before your first real run.
+
+Only have some keys? Pick providers with `--only`. With just the free Gemini key:
+
+```bash
+askrank run examples/dr-kretschmer.yaml --only gemini --extractor rules --runs 1
+```
 
 | Provider | Key | Search mode used |
 |---|---|---|
