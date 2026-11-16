@@ -5,6 +5,7 @@
     askrank run examples/dr-kretschmer.yaml --runs 3    # real API calls
     askrank run examples/dr-kretschmer.yaml --only gemini --extractor rules   # free key only
     askrank report examples/dr-kretschmer.yaml
+    askrank answers examples/dr-kretschmer.yaml          # read the raw answers
     askrank compare examples/dr-kretschmer.yaml 1 2     # did visibility really change?
     askrank label-export examples/dr-kretschmer.yaml    # start an eval set
     askrank eval examples/dr-kretschmer.yaml evals/labels.jsonl
@@ -12,6 +13,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -125,8 +127,14 @@ def run(
     try:
         with console.status("Asking the models...") as status:
             run_id = run_pipeline(cfg, store, providers, extractor, runs_per_query=n,
-                                  on_progress=lambda m: status.update(m))
-        render(summarise(store, run_id, cfg), console)
+                                  on_progress=lambda m: status.update(m),
+                                  on_error=console.print)
+        summary = summarise(store, run_id, cfg)
+        if summary.total_answers == 0:
+            console.print("[red]No answers were collected: every call failed (errors above).[/red]"
+                          "\nCommon causes: the key in .env is wrong or not saved, the model name "
+                          "is not available to your account, or a free-tier quota was hit.")
+        render(summary, console)
         console.print(f"Saved run #{run_id} to {db}")
     finally:
         store.close()
@@ -185,6 +193,43 @@ def compare(
     console.print(f"change {r.diff:+.0%}, z = {r.z:.2f}, p = {r.p_value:.3f}: {verdict}")
     if min(k1, n1 - k1, k2, n2 - k2) < 5:
         console.print("[dim]Small counts: the p-value is rough. Do more runs.[/dim]")
+
+
+@app.command()
+def answers(
+    config: Path = ConfigArg,
+    db: Path = DbOpt,
+    run_id: int | None = typer.Option(None, "--run", help="Run id (default: latest)"),
+    query: str | None = typer.Option(None, "--query", help="Only this query id"),
+    limit: int = typer.Option(20, "--limit", help="Max answers to show"),
+) -> None:
+    """Show the raw answers the models gave, with who was mentioned and cited sources."""
+    cfg = _load(config)
+    store = _open_store(db)
+    try:
+        rid = run_id or store.latest_run_id(cfg.project)
+        if rid is None:
+            console.print(f"[red]No runs for project {cfg.project!r}.[/red]")
+            raise typer.Exit(1)
+        rows = [a for a in store.answers(rid) if not query or a["query_id"] == query][:limit]
+        by_answer: dict[int, list[str]] = {}
+        for m in store.mentions(rid):
+            by_answer.setdefault(m["answer_id"], []).append(
+                f"{m['position']}. {m['matched'] or m['name']} ({m['sentiment']})")
+        for a in rows:
+            label = f"{a['provider']}/{a['model']} | {a['query_id']} | run {a['run_index'] + 1}"
+            console.rule(label)
+            console.print(f"[bold]Q:[/bold] {a['query_text']}")
+            console.print(a["text"], markup=False)
+            found = by_answer.get(a["id"])
+            console.print(f"[bold]Mentions:[/bold] {', '.join(found) if found else 'none'}")
+            cites = [c["url"] for c in json.loads(a["citations_json"])]
+            if cites:
+                console.print("[bold]Sources:[/bold] " + ", ".join(cites), markup=False)
+        if not rows:
+            console.print("No answers stored for that run (did every call fail?).")
+    finally:
+        store.close()
 
 
 @app.command("label-export")
